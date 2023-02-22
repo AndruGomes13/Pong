@@ -23,9 +23,14 @@ WIN = pygame.display.set_mode(DISPLAY_DIM)
 pygame.display.set_caption('Algorithm Demo')
 
 # Frames per second
-FPS = 200
+FPS = 60
 CLOCK = pygame.time.Clock()
 
+
+# Select Input Type
+
+# input_type = "joystick"
+input_type = "keyboard"
 
 # --------------- Global Variables ------------
 
@@ -34,7 +39,7 @@ pygame.init()
 
 # Program Context
 ProgramContext = {"Player_1_vel": 0,
-                  "Playey_2_vel": 0}
+                  "Player_2_vel": 0}
 
 
 ########## Auxiliary functions ##########
@@ -125,7 +130,8 @@ def show_gameover_screen(win):
                 pygame.quit()
             if event.type == pygame.KEYUP:
                 waiting = False
-        
+    
+
 
 
 
@@ -138,7 +144,8 @@ def main():
     running = True
 
     # Initializing joystick input
-    joystick = Joystick()
+    if input_type == "joystick":
+        joystick = Joystick()
 
 
     ### Initializing aux variables
@@ -163,7 +170,7 @@ def main():
 
     object_list.append(ball)
 
-
+    just_lost = False
 
     while running:
         # Setting FPS
@@ -173,26 +180,35 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
 
         # Resetting velocities
-        ProgramContext.update({"Player_1_vel": 0, "Player_2_vel": 0})
+        # ProgramContext.update({"Player_1_vel": 0, "Player_2_vel": 0})
 
 
         ########## Handling key presses #############
         pressed_keys = pygame.key.get_pressed()
         
-        ### Paddle 1
-        if pressed_keys[pygame.K_a]:
-            ProgramContext["Player_1_vel"] = -300
-        if pressed_keys[pygame.K_d]:
-            ProgramContext["Player_1_vel"] = 300
 
         ### Paddle 2
-        # if pressed_keys[pygame.K_RIGHT]:
-        #     ProgramContext["Player_2_vel"] = 300
-        # if pressed_keys[pygame.K_LEFT]:
-        #     ProgramContext["Player_2_vel"] = -300
-        ProgramContext["Player_2_vel"] = joystick.get_joystick()[1] * 300
+        if input_type == "keyboard":
+            if pressed_keys[pygame.K_RIGHT]:
+                ProgramContext["Player_2_vel"] = 300
+            elif pressed_keys[pygame.K_LEFT]:
+                ProgramContext["Player_2_vel"] = -300
+            else:
+                ProgramContext["Player_2_vel"] = 0
+        elif input_type == "joystick":
+            ProgramContext["Player_2_vel"] = joystick.get_joystick()[1] * 300
 
         ########### Top player AI ###########
+
+        ### Paddle 1
+        # if pressed_keys[pygame.K_a]:
+        #     ProgramContext["Player_1_vel"] = -300
+        # elif pressed_keys[pygame.K_d]:
+        #     ProgramContext["Player_1_vel"] = 300
+        # else:
+        #     ProgramContext["Player_1_vel"] = 0
+
+
         AI_max_speed = ball_velocity * 0.6
         if player_1.center_pos - 20> ball.x:
             ProgramContext["Player_1_vel"] = -AI_max_speed
@@ -241,6 +257,7 @@ def main():
         # Check ball colission with paddle
         if not player_1.check_ball_collision(ball) and not player_2.check_ball_collision(ball) and ball_outside(ball):
             print("LOST")
+            just_lost = True
             show_gameover_screen(WIN)
             ball.x = WINDOW_WIDTH//2
             ball.y = WINDOW_HEIGHT//2
@@ -249,14 +266,16 @@ def main():
             
 
         # Steping objects
-        for obj in object_list:
-            obj.step(dt)
+        if not just_lost:
+            for obj in object_list:
+                obj.step(dt)
 
 
         ### Rendering objects
         WIN.fill(pygame.Color("black"))
 
-        # Rendering balls
+        # Rendering ball and paddles
+
         for obj in object_list:
             obj.draw(WIN)
 
@@ -265,8 +284,14 @@ def main():
 
         # Update display
         pygame.display.update()
+        if just_lost == True:
+            just_lost = False
+            time.sleep(2)
+            getTicksLastFrame = pygame.time.get_ticks()
 
 
+        print(ball.coords())
+        print(ball.v_x, ball.v_y)
 
 
 if __name__ == "__main__":

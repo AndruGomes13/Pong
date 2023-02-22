@@ -1,5 +1,5 @@
 import pygame
-
+import math
 
 class Paddle:
 
@@ -28,6 +28,9 @@ class Paddle:
     def pos(self):
         return self._pos
 
+    @property
+    def center_pos(self):
+        return self._pos + self.width/2
 
     @pos.setter
     def pos(self, input):
@@ -39,6 +42,28 @@ class Paddle:
             return
         self._pos = input
 
+    def set_new_vel(self, hit_pos, ball):
+        # hit_pos_normalized = (hit_pos - 0.5) * 2
+        # return_angle = hit_pos_normalized * math.pi / 2
+        # vel = ball.velocity
+        # ball.v_x = (vel * math.sin(return_angle) * abs(hit_pos_normalized) + ball.v_x * (1 - abs(hit_pos_normalized)))
+        # if self.type == "TOP":
+        #     ball.v_y = (vel * math.cos(return_angle) - ball.v_y) / 2
+        #     return
+        # ball.v_y = - (vel * math.cos(return_angle) + ball.v_y) / 2
+        max_angle = math.radians(75)
+        hit_pos_normalized = (hit_pos - 0.5) * 2
+        return_angle = max_angle * hit_pos_normalized
+        if self.type == "TOP":
+            ball.set_velocity_angle(return_angle)
+            return
+
+        ball.set_velocity_angle(- return_angle + math.pi)
+        return
+        
+
+
+
 
     def check_ball_collision(self, ball):
         if self.type == "BOTTOM":
@@ -47,7 +72,8 @@ class Paddle:
             
             if (ball.x > self.pos) and (ball.x < self.pos + self.width):
                 ball.y = self.y_pos_contact - ball.radius
-                ball.v_y *= -1
+                hit_position = (ball.x - self.pos) / self.width 
+                self.set_new_vel(hit_position, ball)
                 return True
             
 
@@ -59,7 +85,8 @@ class Paddle:
             
             if (ball.x > self.pos) and (ball.x < self.pos + self.width):
                 ball.y = self.y_pos_contact + ball.radius
-                ball.v_y *= -1
+                hit_position = (ball.x - self.pos) / self.width 
+                self.set_new_vel(hit_position, ball)
                 return True 
 
     def draw(self, win) -> None:

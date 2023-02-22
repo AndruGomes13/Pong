@@ -112,16 +112,22 @@ def ball_outside(ball):
         return True
     return False 
 
-def lost_screen(ball):
-    reset = False
-    print("LOST")
-    while not reset:
-        reset = pygame.key.get_pressed()[pygame.K_SPACE]
-        time.sleep(0.1)
+def show_gameover_screen(win):
+    fnt = pygame.font.SysFont("Arial", 40)
+    text = fnt.render("Game Over", True, pygame.Color("red"))
+    win.blit(text, (WINDOW_WIDTH//2 - text.get_width() // 2, WINDOW_HEIGHT//2 - text.get_height()//2))
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        CLOCK.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYUP:
+                waiting = False
+        
 
-    ball = Ball(WINDOW_WIDTH//2, WINDOW_HEIGHT//2)
-    ball.v_x = random.random() * 100 + 200
-    ball.v_y = random.random() * 200
+
 
 
 ########## Main ##########
@@ -151,9 +157,10 @@ def main():
     object_list.append(player_2)
     
     # Setting ball
-    ball = Ball(WINDOW_WIDTH//2, WINDOW_HEIGHT//2)
-    ball.v_x = random.random() * 400
-    ball.v_y = random.random() * 400
+    ball_velocity = 300
+    ball = Ball(WINDOW_WIDTH//2, WINDOW_HEIGHT//2, ball_velocity)
+    ball.set_velocity_angle(random.random())
+
     object_list.append(ball)
 
 
@@ -185,6 +192,15 @@ def main():
         #     ProgramContext["Player_2_vel"] = -300
         ProgramContext["Player_2_vel"] = joystick.get_joystick()[1] * 300
 
+        ########### Top player AI ###########
+        AI_max_speed = ball_velocity * 0.6
+        if player_1.center_pos - 20> ball.x:
+            ProgramContext["Player_1_vel"] = -AI_max_speed
+
+        elif player_1.center_pos + 20 < ball.x:
+            ProgramContext["Player_1_vel"] = AI_max_speed
+
+
 
         # Updating game status with program context
 
@@ -192,9 +208,7 @@ def main():
         player_2.vel = ProgramContext["Player_2_vel"]
 
 
-        ########### Top player AI ###########
-
-        player_1.pos = ball.x - player_1.width/2
+        
 
 
         #######################
@@ -227,7 +241,11 @@ def main():
         # Check ball colission with paddle
         if not player_1.check_ball_collision(ball) and not player_2.check_ball_collision(ball) and ball_outside(ball):
             print("LOST")
-
+            show_gameover_screen(WIN)
+            ball.x = WINDOW_WIDTH//2
+            ball.y = WINDOW_HEIGHT//2
+            ball.set_velocity_angle(0)
+    
             
 
         # Steping objects

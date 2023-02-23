@@ -195,6 +195,7 @@ def main():
                 ProgramContext["Player_2_vel"] = -300
             else:
                 ProgramContext["Player_2_vel"] = 0
+
         elif input_type == "joystick":
             ProgramContext["Player_2_vel"] = joystick.get_joystick()[1] * 300
 
@@ -288,10 +289,6 @@ def main():
             just_lost = False
             time.sleep(2)
             getTicksLastFrame = pygame.time.get_ticks()
-
-
-        print(ball.coords())
-        print(ball.v_x, ball.v_y)
 
 
 if __name__ == "__main__":
